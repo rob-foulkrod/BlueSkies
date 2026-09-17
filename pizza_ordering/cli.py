@@ -20,8 +20,10 @@ def _prompt_choice(prompt: str, options: Type[E]) -> E:
         for index, option in enumerate(options_list, start=1):
             print(f"  {index}. {option.label} (${option.price:.2f})")
         choice = input("Enter number: ").strip()
-        if choice.isdigit() and 1 <= int(choice) <= len(options_list):
-            return options_list[int(choice) - 1]
+        if choice.isdigit():
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(options_list):
+                return options_list[choice_num - 1]
         print("Invalid choice, please try again.\n")
 
 
@@ -39,8 +41,9 @@ def _prompt_toppings() -> List[Topping]:
     selected: List[Topping] = []
     for part in raw.split(","):
         part = part.strip()
-        if part.isdigit() and 1 <= int(part) <= len(toppings_list):
-            selected.append(toppings_list[int(part) - 1])
+        part_num = int(part) if part.isdigit() else None
+        if part_num is not None and 1 <= part_num <= len(toppings_list):
+            selected.append(toppings_list[part_num - 1])
         else:
             print(f"Ignoring invalid topping selection: '{part}'")
     return selected
