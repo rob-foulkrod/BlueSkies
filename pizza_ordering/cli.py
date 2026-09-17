@@ -12,6 +12,14 @@ from .storage import OrderStorage
 E = TypeVar("E")
 
 
+def _safe_int(text: str) -> int | None:
+    """Parse ``text`` as an int, returning None instead of raising on failure."""
+    try:
+        return int(text)
+    except ValueError:
+        return None
+
+
 def _prompt_choice(prompt: str, options: Type[E]) -> E:
     """Prompt the user to choose one value from an Enum type."""
     options_list = list(options)
@@ -19,11 +27,9 @@ def _prompt_choice(prompt: str, options: Type[E]) -> E:
         print(prompt)
         for index, option in enumerate(options_list, start=1):
             print(f"  {index}. {option.label} (${option.price:.2f})")
-        choice = input("Enter number: ").strip()
-        if choice.isdigit():
-            choice_num = int(choice)
-            if 1 <= choice_num <= len(options_list):
-                return options_list[choice_num - 1]
+        choice_num = _safe_int(input("Enter number: ").strip())
+        if choice_num is not None and 1 <= choice_num <= len(options_list):
+            return options_list[choice_num - 1]
         print("Invalid choice, please try again.\n")
 
 
@@ -41,7 +47,7 @@ def _prompt_toppings() -> List[Topping]:
     selected: List[Topping] = []
     for part in raw.split(","):
         part = part.strip()
-        part_num = int(part) if part.isdigit() else None
+        part_num = _safe_int(part)
         if part_num is not None and 1 <= part_num <= len(toppings_list):
             selected.append(toppings_list[part_num - 1])
         else:

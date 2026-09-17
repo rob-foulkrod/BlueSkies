@@ -13,7 +13,12 @@ from typing import List
 
 
 class PricedEnum(Enum):
-    """Base class for enums whose members carry a display label and a price."""
+    """Base class for enums whose members carry a display label and a price.
+
+    ``label`` and ``price`` are assumed to be a non-empty string and a
+    non-negative number respectively; members are fixed, in-code constants
+    so no runtime validation is performed.
+    """
 
     def __init__(self, label: str, price: float) -> None:
         self.label = label
