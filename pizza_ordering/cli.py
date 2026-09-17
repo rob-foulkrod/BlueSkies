@@ -41,6 +41,8 @@ def _prompt_toppings() -> List[Topping]:
         part = part.strip()
         if part.isdigit() and 1 <= int(part) <= len(toppings_list):
             selected.append(toppings_list[int(part) - 1])
+        else:
+            print(f"Ignoring invalid topping selection: '{part}'")
     return selected
 
 

@@ -3,7 +3,7 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
-from pizza_ordering.cli import add_order, print_orders
+from pizza_ordering.cli import _prompt_toppings, add_order, main, print_orders
 from pizza_ordering.models import Crust, Pizza, Size, Topping
 from pizza_ordering.storage import OrderStorage
 
@@ -71,6 +71,29 @@ class CliTests(unittest.TestCase):
         with redirect_stdout(out2):
             print_orders(storage)
         self.assertIn("Order #1", out2.getvalue())
+
+    def test_main_menu_add_print_and_exit(self):
+        # 1=Add order -> size 1, crust 2, toppings "1", no more pizzas
+        # 2=Print orders, then an invalid option, then 3=Exit
+        inputs = iter(["1", "1", "2", "1", "n", "2", "invalid", "3"])
+        out = io.StringIO()
+        with patch("builtins.input", side_effect=lambda _prompt="": next(inputs)):
+            with redirect_stdout(out):
+                main()
+        output = out.getvalue()
+        self.assertIn("Order added!", output)
+        self.assertIn("Order #1", output)
+        self.assertIn("Invalid option", output)
+        self.assertIn("Goodbye!", output)
+
+    def test_prompt_toppings_warns_on_invalid_selection(self):
+        with patch("builtins.input", return_value="1,99,abc"):
+            out = io.StringIO()
+            with redirect_stdout(out):
+                toppings = _prompt_toppings()
+        self.assertEqual(toppings, [Topping.PEPPERONI])
+        self.assertIn("Ignoring invalid topping selection: '99'", out.getvalue())
+        self.assertIn("Ignoring invalid topping selection: 'abc'", out.getvalue())
 
 
 if __name__ == "__main__":
