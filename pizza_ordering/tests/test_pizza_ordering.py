@@ -1,9 +1,20 @@
 import io
+import json
+import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime
+from pathlib import Path
 from unittest.mock import patch
 
-from pizza_ordering.cli import _prompt_toppings, add_order, main, print_orders
+from pizza_ordering.cli import (
+    _prompt_toppings,
+    add_order,
+    export_all_orders,
+    main,
+    print_orders,
+)
+from pizza_ordering.exporter import export_orders
 from pizza_ordering.models import Crust, Pizza, Size, Topping
 from pizza_ordering.storage import OrderStorage
 
@@ -74,8 +85,8 @@ class CliTests(unittest.TestCase):
 
     def test_main_menu_add_print_and_exit(self):
         # 1=Add order -> size 1, crust 2, toppings "1", no more pizzas
-        # 2=Print orders, then an invalid option, then 3=Exit
-        inputs = iter(["1", "1", "2", "1", "n", "2", "invalid", "3"])
+        # 2=Print orders, then an invalid option, then 4=Exit
+        inputs = iter(["1", "1", "2", "1", "n", "2", "invalid", "4"])
         out = io.StringIO()
         with patch("builtins.input", side_effect=lambda _prompt="": next(inputs)):
             with redirect_stdout(out):
@@ -94,6 +105,45 @@ class CliTests(unittest.TestCase):
         self.assertEqual(toppings, [Topping.PEPPERONI])
         self.assertIn("Ignoring invalid topping selection: '99'", out.getvalue())
         self.assertIn("Ignoring invalid topping selection: 'abc'", out.getvalue())
+
+    def test_export_all_orders_prints_generated_paths(self):
+        storage = OrderStorage()
+        storage.add_order([Pizza(size=Size.SMALL, crust=Crust.REGULAR)])
+        paths = (Path("exports/orders.json"), Path("exports/orders.html"))
+        out = io.StringIO()
+        with patch("pizza_ordering.cli.export_orders", return_value=paths):
+            with redirect_stdout(out):
+                export_all_orders(storage)
+        self.assertIn("Export complete!", out.getvalue())
+        self.assertIn("orders.json", out.getvalue())
+        self.assertIn("orders.html", out.getvalue())
+
+
+class ExportTests(unittest.TestCase):
+    def test_export_writes_json_and_self_contained_html(self):
+        storage = OrderStorage()
+        pizza = Pizza(
+            size=Size.LARGE,
+            crust=Crust.STUFFED,
+            toppings=[Topping.PEPPERONI],
+        )
+        storage.add_order([pizza])
+        export_time = datetime(2026, 9, 17, 10, 30)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            json_path, html_path = export_orders(
+                storage.all_orders(), temp_dir, export_time
+            )
+            data = json.loads(json_path.read_text(encoding="utf-8"))
+            html = html_path.read_text(encoding="utf-8")
+
+        self.assertEqual(data["exported_at"], export_time.isoformat())
+        self.assertEqual(data["order_count"], 1)
+        self.assertEqual(data["grand_total"], pizza.price)
+        self.assertEqual(data["orders"][0]["pizzas"][0]["size"], "Large")
+        self.assertIn("const DATA =", html)
+        self.assertIn("Pepperoni", html)
+        self.assertNotIn("<script src=", html)
 
 
 if __name__ == "__main__":

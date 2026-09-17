@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import List, Type, TypeVar
 
+from .exporter import export_orders
 from .models import Crust, Pizza, Size, Topping
 from .storage import OrderStorage
 
@@ -18,7 +19,6 @@ def _safe_int(text: str) -> int | None:
         return int(text)
     except ValueError:
         return None
-
 
 def _prompt_choice(prompt: str, options: Type[E]) -> E:
     """Prompt the user to choose one value from an Enum type."""
@@ -84,6 +84,14 @@ def print_orders(storage: OrderStorage) -> None:
         print()
 
 
+def export_all_orders(storage: OrderStorage) -> None:
+    """Export all current orders and print the generated file paths."""
+    json_path, html_path = export_orders(storage.all_orders())
+    print("\nExport complete!")
+    print(f"JSON: {json_path.resolve()}")
+    print(f"HTML viewer: {html_path.resolve()}")
+
+
 def main() -> None:
     """Run the interactive menu loop.
 
@@ -95,7 +103,8 @@ def main() -> None:
         "\nPizza Ordering System\n"
         "1. Add order\n"
         "2. Print orders\n"
-        "3. Exit\n"
+        "3. Export orders\n"
+        "4. Exit\n"
     )
     while True:
         print(menu)
@@ -105,11 +114,12 @@ def main() -> None:
         elif choice == "2":
             print_orders(storage)
         elif choice == "3":
+            export_all_orders(storage)
+        elif choice == "4":
             print("Goodbye!")
             break
         else:
             print("Invalid option, please try again.")
-
 
 if __name__ == "__main__":
     main()
