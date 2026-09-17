@@ -76,6 +76,11 @@ def print_orders(storage: OrderStorage) -> None:
 
 
 def main() -> None:
+    """Run the interactive menu loop.
+
+    Orders are stored only in memory via ``OrderStorage``, so they are
+    lost once the program exits; there is no persistence to disk.
+    """
     storage = OrderStorage()
     menu = (
         "\nPizza Ordering System\n"

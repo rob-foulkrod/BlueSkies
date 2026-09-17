@@ -12,7 +12,15 @@ from enum import Enum
 from typing import List
 
 
-class Crust(Enum):
+class PricedEnum(Enum):
+    """Base class for enums whose members carry a display label and a price."""
+
+    def __init__(self, label: str, price: float) -> None:
+        self.label = label
+        self.price = price
+
+
+class Crust(PricedEnum):
     """Available crust types and their base price contribution."""
 
     THIN = ("Thin", 1.00)
@@ -20,12 +28,8 @@ class Crust(Enum):
     THICK = ("Thick", 1.50)
     STUFFED = ("Stuffed", 2.50)
 
-    def __init__(self, label: str, price: float) -> None:
-        self.label = label
-        self.price = price
 
-
-class Size(Enum):
+class Size(PricedEnum):
     """Available pizza sizes and their base price."""
 
     SMALL = ("Small", 8.00)
@@ -33,12 +37,8 @@ class Size(Enum):
     LARGE = ("Large", 12.00)
     XLARGE = ("X-Large", 14.00)
 
-    def __init__(self, label: str, price: float) -> None:
-        self.label = label
-        self.price = price
 
-
-class Topping(Enum):
+class Topping(PricedEnum):
     """Available toppings and the price added per topping."""
 
     PEPPERONI = ("Pepperoni", 1.50)
@@ -50,10 +50,6 @@ class Topping(Enum):
     OLIVES = ("Olives", 1.00)
     GREEN_PEPPER = ("Green Pepper", 0.75)
     PINEAPPLE = ("Pineapple", 1.00)
-
-    def __init__(self, label: str, price: float) -> None:
-        self.label = label
-        self.price = price
 
 
 @dataclass
